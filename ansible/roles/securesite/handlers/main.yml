@@ -1,0 +1,8 @@
+---
+- name: restart nginx
+  service: name=nginx state=restarted enabled=yes
+
+# TEST FOR: Check nginx service Status
+- name: TEST ~ Ensure Nginx is running
+  assert:
+    that: "nginx_status.stdout == ' * nginx is running'"

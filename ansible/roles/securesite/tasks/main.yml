@@ -1,0 +1,19 @@
+- name: Copy nginx configuration 
+  template:
+      src: templates/appcode.conf.j2
+      dest: /etc/nginx/sites-available/appcode.conf
+
+- name: Create sites-enabled symlink for nginx growlerfriday port 80 configuration
+  file:
+    src: /etc/nginx/sites-available/appcode.conf
+    dest: /etc/nginx/sites-enabled/appcode.conf
+    state: link
+  notify: restart nginx
+
+- name: Check Server Status
+  command: service nginx status
+  register: nginx_status
+  notify:
+    - TEST ~ Ensure Nginx is running
+
+

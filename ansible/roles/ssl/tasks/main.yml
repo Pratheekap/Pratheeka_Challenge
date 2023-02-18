@@ -1,0 +1,32 @@
+---
+
+- name: Install  openssl
+  become: yes
+  apt: 
+      name: openssl 
+      state: present
+
+
+- name: create certificates directory
+  become: yes
+  file:
+    path:  {{ nginx_ssl_dir }}
+    state: directory
+    group: ubuntu
+    owner: ubuntu
+  notify: TEST ~ Verify Nginx SSL Directory
+
+- name : create ssl certificates
+  become: yes
+  shell: |
+     openssl req -new -nodes -x509 -subj "/CN=testingin" -days 365 -keyout {{ nginx_ssl_dir }}/server.key -out {{ nginx_ssl_dir }}/server.crt -extensions v3_ca
+  args:
+    executable: /bin/bash
+  notify:
+    - TEST ~ SSL Key File Creation
+    - TEST ~ SSL Cert File Creation
+
+
+
+
+

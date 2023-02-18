@@ -1,0 +1,30 @@
+---
+
+- name: Install nginx
+  become: yes
+  apt: 
+    name: nginx 
+    state: present 
+    update_cache: true
+
+- name: Clean up default web server configs
+  file:
+  path: '{{ item.file }}'
+  state: absent
+  with_items:
+    - { file: '/etc/nginx/conf.d/autoindex.conf' }
+    - { file: '/etc/nginx/conf.d/README' }
+    - { file: '/etc/nginx/conf.d/userdir.conf' }
+    - { file: '/etc/nginx/conf.d/welcome.conf' }
+
+- name: Install system nginx config
+  template:
+    src: templates/nginx.conf
+    dest: /etc/nginx/nginx.conf
+    
+- name: Copy the static index.html
+  copy:
+   src: files/index.html
+   dest: /var/www/html/index.html
+   force: no
+   backup: yes

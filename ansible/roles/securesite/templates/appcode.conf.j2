@@ -1,0 +1,19 @@
+server {
+    listen 80;
+    listen [::]:80;
+    server_name testing.com www.testing.com; 
+    return 301 https://testing.com$request_uri;
+}
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  server_name www.testing.com;
+  ssl on;
+  root /var/www/html/index.html;
+  ssl_certificate /etc/nginx/ssl/server.crt;
+  ssl_certificate_key /etc/nginx/ssl/server.key;
+
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+}

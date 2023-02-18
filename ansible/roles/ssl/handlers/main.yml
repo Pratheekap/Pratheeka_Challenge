@@ -1,0 +1,22 @@
+---
+
+# TEST FOR: Create Nginx Directory for TLS/SSL Cert & Key Files
+- name: TEST ~ Verify Nginx SSL Directory
+  wait_for:
+    path: "{{ nginx_ssl_dir }}"
+    state: present
+    timeout: 1
+  
+ # TEST FOR: Generate a Self Signed OpenSSL certificate & key
+- name: TEST ~ SSL Key File Creation
+  wait_for:
+    path: "{{ nginx_ssl_dir }}/server.key"
+    state: present
+    timeout: 1
+    
+# TEST FOR: Generate a Self Signed OpenSSL certificate & key
+- name: TEST ~ SSL Cert File Creation
+  wait_for:
+    path: "{{ nginx_ssl_dir }}/server.crt"
+    state: present
+    timeout: 1

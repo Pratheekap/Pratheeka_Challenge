@@ -1,0 +1,63 @@
+- name: Packer build and Auto Scaling
+  hosts: localhost
+  connection: local"
+  tasks:
+      - name: Getting Timestamp
+        shell: echo `date +%Y-%m-%d-%H-%M-%S`
+        register: timestamp
+      - name: Run Packer build for creating AMI
+        shell: packer build my_test_build.json | tail -1 | grep "ami-" | awk '{print $2}'
+        register: my_ami
+      - name: AMI name
+        debug: msg={{ my_ami.stdout }}
+      - name: Creating Security Group
+        ec2_group:
+          name: "nginx-security_group"
+          description: "Allowing 80 and 443 Ports"
+          vpc_id: "{{ vpc_id }}"
+          region: "{{ region }}"
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+        register: securitygroupid
+      - name: Creating launch configuration
+        ec2_lc:
+          name: "nginx_packer_{{timestamp.stdout}}"
+          region: "{{ region }}"
+          image_id: "{{ my_ami.stdout }}"
+          assign_public_ip: "yes"
+          instance_profile_name: s3readrole
+          key_name: "testengine"
+          security_groups: "{{ securitygroupid.main.id }}"
+          instance_type: t2.micro
+          volumes:
+            - device_name: /dev/xvda
+              volume_size: 8
+              device_type: gp2
+              delete_on_termination: true
+              encrypted: false
+        register: ec2_lc_info
+        tags:
+          - test1
+      - name: ec2 info
+        debug: msg={{ ec2_lc_info.name }}
+      - name: Updating ASG
+        ec2_asg:
+          name: "mynginxasg"
+          region: "{{ region }}"
+          availability_zones: [ 'us-east-1a' ]
+          vpc_zone_identifier: ['subnet-7b3ad85a']
+          launch_config_name: "{{ ec2_lc_info.name }}"
+          termination_policies: ['OldestLaunchConfiguration']
+          state: present
+          min_size: 1
+          max_size: 1
+          desired_capacity: 1
+        tags:
+           - test2
